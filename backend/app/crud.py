@@ -5,14 +5,20 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from passlib.hash import pbkdf2_sha256
 from typing import List
-from app import models, schemas
+
+# АБСОЛЮТНЫЕ ИМПОРТЫ
+from backend.app.database import (
+    User, Recipe, Ingredient, Review, Collection, ShoppingList, 
+    RecipeIngredients, CollectionRecipes
+)
+from backend.app import schemas
 
 
 # ---------- USER ----------
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = pbkdf2_sha256.hash(user.password)
-    db_user = models.User(
+    db_user = User(
         email=user.email,
         username=user.username,
         password_hash=hashed_password,
@@ -28,20 +34,20 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
+    return db.query(User).filter(User.email == email).first()
 
 
 def get_user_by_id(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+    return db.query(User).filter(User.id == user_id).first()
 
 
 # ---------- INGREDIENTS ----------
 
 def get_or_create_ingredient(db: Session, name: str, unit: str = "г"):
-    ingredient = db.query(models.Ingredient).filter(models.Ingredient.name == name).first()
+    ingredient = db.query(Ingredient).filter(Ingredient.name == name).first()
     if ingredient:
         return ingredient
-    ingredient = models.Ingredient(name=name, default_unit=unit)
+    ingredient = Ingredient(name=name, default_unit=unit)
     db.add(ingredient)
     db.commit()
     db.refresh(ingredient)
@@ -51,7 +57,7 @@ def get_or_create_ingredient(db: Session, name: str, unit: str = "г"):
 # ---------- RECIPES ----------
 
 def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
-    db_recipe = models.Recipe(
+    db_recipe = Recipe(
         title=recipe.title,
         description=recipe.description,
         cook_time=recipe.cook_time,
@@ -70,7 +76,7 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
     for item in recipe.ingredients:
         ingredient = get_or_create_ingredient(db, item.name, item.unit)
         db.execute(
-            models.RecipeIngredients.insert().values(
+            RecipeIngredients.insert().values(
                 recipe_id=db_recipe.id,
                 ingredient_id=ingredient.id,
                 quantity=item.quantity,
@@ -82,11 +88,11 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
 
 
 def get_all_recipes(db: Session, skip: int = 0, limit: int = 50):
-    return db.query(models.Recipe).offset(skip).limit(limit).all()
+    return db.query(Recipe).offset(skip).limit(limit).all()
 
 
 def get_recipe_by_id(db: Session, recipe_id: int):
-    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Рецепт не найден")
     return recipe
@@ -105,14 +111,14 @@ def delete_recipe(db: Session, recipe_id: int, user_id: int):
 
 def create_review(db: Session, recipe_id: int, user_id: int, review: schemas.ReviewCreate):
     existing = (
-        db.query(models.Review)
-        .filter(models.Review.recipe_id == recipe_id, models.Review.user_id == user_id)
+        db.query(Review)
+        .filter(Review.recipe_id == recipe_id, Review.user_id == user_id)
         .first()
     )
     if existing:
         raise HTTPException(status_code=400, detail="Отзыв уже оставлен")
 
-    db_review = models.Review(
+    db_review = Review(
         recipe_id=recipe_id,
         user_id=user_id,
         rating=review.rating,
@@ -125,13 +131,13 @@ def create_review(db: Session, recipe_id: int, user_id: int, review: schemas.Rev
 
 
 def get_reviews_for_recipe(db: Session, recipe_id: int):
-    return db.query(models.Review).filter(models.Review.recipe_id == recipe_id).all()
+    return db.query(Review).filter(Review.recipe_id == recipe_id).all()
 
 
 # ---------- COLLECTIONS ----------
 
 def create_collection(db: Session, user_id: int, collection: schemas.CollectionCreate):
-    db_collection = models.Collection(
+    db_collection = Collection(
         user_id=user_id,
         title=collection.title,
         description=collection.description,
@@ -145,7 +151,7 @@ def create_collection(db: Session, user_id: int, collection: schemas.CollectionC
 
 def add_recipe_to_collection(db: Session, collection_id: int, recipe_id: int):
     db.execute(
-        models.CollectionRecipes.insert().values(
+        CollectionRecipes.insert().values(
             collection_id=collection_id,
             recipe_id=recipe_id
         )
@@ -157,7 +163,7 @@ def add_recipe_to_collection(db: Session, collection_id: int, recipe_id: int):
 # ---------- SHOPPING LISTS ----------
 
 def create_shopping_list(db: Session, user_id: int, data: schemas.ShoppingListCreate):
-    db_list = models.ShoppingList(
+    db_list = ShoppingList(
         user_id=user_id,
         title=data.title,
         recipes=data.recipes,
@@ -170,4 +176,4 @@ def create_shopping_list(db: Session, user_id: int, data: schemas.ShoppingListCr
 
 
 def get_user_shopping_lists(db: Session, user_id: int):
-    return db.query(models.ShoppingList).filter(models.ShoppingList.user_id == user_id).all()
+    return db.query(ShoppingList).filter(ShoppingList.user_id == user_id).all()

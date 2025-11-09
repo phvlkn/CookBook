@@ -1,7 +1,9 @@
-from fastapi import FastAPI, HTTPException, status
-from database import init_db
-from auth import authenticate_user, create_access_token
-from schemas import UserLogin, Token
+from fastapi import FastAPI, HTTPException, status, Depends
+from sqlalchemy.orm import Session
+from .database import init_db, get_db
+from .auth import authenticate_user, create_access_token
+from .schemas import UserLogin, Token, UserCreate, UserResponse
+from .crud import create_user
 from datetime import timedelta
 
 app = FastAPI(title="CookBook API")
@@ -24,3 +26,11 @@ async def login_for_access_token(user_data: UserLogin):
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/auth/register", response_model=UserResponse)
+async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    return create_user(db, user_data)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -145,3 +145,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def init_db():
     """Создание всех таблиц в БД"""
     Base.metadata.create_all(bind=engine)
+
+# ---------- ФУНКЦИЯ ДЛЯ ЗАВИСИМОСТЕЙ FASTAPI ----------
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

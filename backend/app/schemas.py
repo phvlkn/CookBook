@@ -22,7 +22,7 @@ class UserResponse(UserBase):
     is_active: bool = True
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ---------- AUTH ----------
@@ -51,7 +51,7 @@ class IngredientResponse(IngredientBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ---------- RECIPE ----------
@@ -90,7 +90,7 @@ class RecipeResponse(RecipeBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ---------- REVIEW ----------
@@ -111,7 +111,7 @@ class ReviewResponse(ReviewBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ---------- COLLECTION ----------
@@ -133,7 +133,7 @@ class CollectionResponse(CollectionBase):
     recipes: Optional[List[RecipeResponse]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ---------- SHOPPING LIST ----------
@@ -160,16 +160,7 @@ class ShoppingListResponse(ShoppingListBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
-
-from pydantic import BaseModel
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: str = None
+        from_attributes = True
 
 class UserLogin(BaseModel):
     email: str
