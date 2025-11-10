@@ -1,0 +1,20 @@
+# Основные зависимости для работы с PostgreSQL через SQLAlchemy
+SQLAlchemy>=2.0
+psycopg2
+
+# Если проект на FastAPI (современный API)
+fastapi>=0.111
+uvicorn[standard]>=0.30
+
+
+# Для работы с Pydantic-схемами (например, schemas.py)
+pydantic>=2.5
+pydantic-settings>=2.1
+pydantic[email]
+# Для удобной отладки и тестов
+python-dotenv>=1.0
+pytest>=8.0
+
+python-jose
+passlib
+
