@@ -131,4 +131,4 @@ if __name__ == "__main__":
         create_seed_data()
     except Exception as e:
         print(f"Seeding failed: {e}")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
