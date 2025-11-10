@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-from .database import init_db, get_db
-from .auth import authenticate_user, create_access_token
-from .schemas import UserLogin, Token, UserCreate, UserResponse
-from .crud import create_user
+from database import init_db, get_db
+from auth import authenticate_user, create_access_token
+from schemas import UserLogin, Token, UserCreate, UserResponse
+from crud import create_user
 from datetime import timedelta
 
 app = FastAPI(title="CookBook API")
@@ -33,4 +33,5 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
+    init_db()
     uvicorn.run(app, host="127.0.0.1", port=8000)

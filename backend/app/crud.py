@@ -7,11 +7,11 @@ from passlib.hash import pbkdf2_sha256
 from typing import List
 
 # АБСОЛЮТНЫЕ ИМПОРТЫ
-from backend.app.database import (
+from database import (
     User, Recipe, Ingredient, Review, Collection, ShoppingList, 
     RecipeIngredients, CollectionRecipes
 )
-from backend.app import schemas
+import schemas
 
 
 # ---------- USER ----------
