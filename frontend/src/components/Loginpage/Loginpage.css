@@ -91,3 +91,11 @@
   color: inherit;          /* при наведении цвет не меняется */
   text-decoration: none;   /* при наведении подчеркивание не появляется */
 }
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: -5px;
+  align-self: flex-start;
+  padding-left: 10px;
+  font-weight: 500;
+}

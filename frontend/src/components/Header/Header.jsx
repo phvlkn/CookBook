@@ -1,36 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Header.css";
-import { Link } from "react-router-dom";
-const avatar = null; 
+import { Link, useNavigate } from "react-router-dom";
+
+const defaultAvatar = "/default-avatar.png";
+
 function Header() {
   const [query, setQuery] = useState("");
+  const [loggedUser, setLoggedUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Функция отправки запроса
-  const handleSearch = async (e) => {
-    e.preventDefault(); // не перезагружать страницу
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    setLoggedUser(user);
+  }, []);
 
-    if (!query.trim()) return; // если пусто — ничего не делаем
+  // Закрытие меню при клике вне
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
 
-    try {
-      // Отправляем запрос (POST)
-      const response = await fetch("https://your-api.com/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ search: query }),
-      });
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
-      if (!response.ok) throw new Error("Ошибка при запросе");
-
-      const data = await response.json();
-      console.log("Результаты поиска:", data);
-    } catch (error) {
-      console.error("Ошибка запроса:", error);
+  const handleAvatarClick = () => {
+    if (!loggedUser) {
+      navigate("/login");
+      return;
     }
+    setMenuOpen((prev) => !prev);
+  };
 
-    // ❌ Не очищаем строку — текст остаётся
-    // setQuery("");
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    setLoggedUser(null);
+    setMenuOpen(false);
+    navigate("/login");
   };
 
   return (
@@ -39,7 +49,7 @@ function Header() {
         <h1 className="logo">Recipes</h1>
       </a>
 
-      <form className="search" onSubmit={handleSearch}>
+      <form className="search" onSubmit={(e) => e.preventDefault()}>
         <input
           type="text"
           placeholder="Search..."
@@ -48,15 +58,46 @@ function Header() {
         />
       </form>
 
-      <div className="actions">
-        {/* <button className="add-btn" onClick={() => navigate("/upload")}>Upload</button> */}
-        <Link to="/upload" className="add-btn">Upload</Link>
-        <a href="/login">
+      <div className="actions" ref={menuRef}>
+        <button
+  className="add-btn"
+  onClick={() => {
+    if (loggedUser) {
+      navigate("/upload");
+    } else {
+      navigate("/login");
+    }
+  }}
+>
+  Upload
+</button>
+
+
+        <button onClick={handleAvatarClick} className="avatar-btn">
           <img
             className="profile-img"
-            src={avatar}
+            src={loggedUser?.avatar || defaultAvatar}
+            alt="profile"
           />
-        </a>
+        </button>
+
+        {menuOpen && loggedUser && (
+          <div className="avatar-menu">
+            <button
+              className="avatar-menu-item"
+              onClick={() => {
+                navigate(`/profile/${loggedUser.email}`);
+                setMenuOpen(false);
+              }}
+            >
+              Профиль
+            </button>
+
+            <button className="avatar-menu-item logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

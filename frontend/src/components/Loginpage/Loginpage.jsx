@@ -24,7 +24,7 @@ function Loginpage() {
       setError("");
 
       // Перенаправление на страницу профиля
-      navigate("/profile");
+      navigate(`/profile/${user.email}`);
     } else {
       setError("Неверный email или пароль");
     }
