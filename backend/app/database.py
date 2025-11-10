@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import (
     Column,
     String,
@@ -17,7 +18,10 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/cookbook"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://postgres:postgres@db:5432/cookbook",
+)
 
 Base = declarative_base()
 
