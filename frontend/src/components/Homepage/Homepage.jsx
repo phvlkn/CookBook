@@ -48,8 +48,9 @@ function Homepage() {
         <div className="grid">
           {pins.map((pin) => (
             <div key={pin.id} className="pin">
-              <img src={pin.image} alt={pin.title} loading="lazy" />
+              <a href={`/recipe/${pin.id}`}><img src={pin.image} alt={pin.title} loading="" /></a>
               <p>{pin.title}</p>
+
             </div>
           ))}
         </div>
