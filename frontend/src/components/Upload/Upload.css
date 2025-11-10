@@ -1,0 +1,216 @@
+.upload-container {
+  padding: 110px 40px 60px; /* учитываем фиксированный Header */
+  max-width: 1000px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.upload-container h1 {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 2rem;
+  color: #000;
+}
+
+/* Форма */
+.upload-form {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #000;
+}
+
+/* Поля */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #000;
+}
+
+.label-title {
+  font-weight: 600;
+  color: #222;
+}
+
+/* Текстовые инпуты */
+.text-input,
+.field input[type="text"],
+.field textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #f0f0f0;
+  font-size: 1rem;
+  outline: none;
+  resize: vertical;
+  color: #000;
+}
+
+.field textarea {
+  min-height: 80px;
+}
+
+/* Кнопки добавления (маленькие) */
+.ingredient-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ingredient-row input[type="text"] {
+  flex: 1;
+}
+
+.add-small,
+.remove-small,
+.add-step-btn {
+  background: #dcdcdc;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.add-small:hover,
+.add-step-btn:hover {
+  background: #c8c8c8;
+}
+
+.remove-small {
+  margin-left: 10px;
+  padding: 6px 10px;
+}
+
+/* Список ингредиентов */
+.ingredient-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ingredient-item {
+  background: #fff;
+  border-radius: 20px;
+  padding: 8px 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Ползунок */
+input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Шаги */
+.steps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.step-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-top strong {
+  font-size: 0.95rem;
+}
+
+.remove-step {
+  border: none;
+  background: transparent;
+  color: #b00;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Превью картинок */
+.image-preview {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 380px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.image-preview.small {
+  width: 140px;
+  height: 90px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Кнопки действий */
+.actions-row {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.publish-btn {
+  background: #2b2b2b;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.cancel-btn {
+  background: #dcdcdc;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Адаптив */
+@media (max-width: 700px) {
+  .upload-container {
+    padding: 100px 16px 40px;
+  }
+
+  .image-preview.small {
+    width: 120px;
+    height: 80px;
+  }
+}

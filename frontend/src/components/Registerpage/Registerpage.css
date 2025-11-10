@@ -1,0 +1,93 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+  background-color: #fff;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #000;
+  background-color: #f4f4f4;
+  width: 100%;
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 80px;
+  margin-top: 0;
+  border: none;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 300px;
+  gap: 15px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 20px;
+  background-color: #dcdcdc;
+  
+  font-size: 1rem;
+  outline: none;
+  color: #000;
+}
+
+.password-container {
+      padding: 10px 45px 10px 15px;
+  position: relative;
+  width: 100%;
+}
+
+.forgot-link {   
+  padding: 10px 45px 10px 15px;
+  align-self: flex-end;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: #000;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-btn,
+.create-btn {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-radius: 20px;
+  background-color: #000;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-btn:hover,
+.create-btn:hover {
+  background-color: #333;
+}
+
+.title-link {
+  text-decoration: none;   /* убираем подчеркивание */
+  color: inherit;          /* наследуем цвет заголовка */
+  cursor: pointer;         /* курсор в виде руки */
+  user-select: none;       /* запрещаем выделение текста */
+
+}
+.title-link:hover {
+  color: inherit;          /* при наведении цвет не меняется */
+  text-decoration: none;   /* при наведении подчеркивание не появляется */
+}
