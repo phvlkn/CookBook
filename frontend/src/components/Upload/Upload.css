@@ -21,6 +21,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  color: #000;
 }
 
 /* Поля */
@@ -28,6 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  color: #000;
 }
 
 .label-title {
@@ -46,6 +48,7 @@
   font-size: 1rem;
   outline: none;
   resize: vertical;
+  color: #000;
 }
 
 .field textarea {

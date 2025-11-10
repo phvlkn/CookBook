@@ -94,7 +94,7 @@ function Upload() {
     console.log("Сохранён рецепт (заглушка):", recipe);
 
     // Если хочешь отправить на сервер — пример (раскомментируй и доработай URL):
-    /*
+    
     const formData = new FormData();
     formData.append("title", title);
     formData.append("time", time);
@@ -116,7 +116,7 @@ function Upload() {
     } catch (err) {
       console.error(err);
     }
-    */
+    
 
     // После сохранения можно перейти на страницу профиля:
     const user = JSON.parse(localStorage.getItem("user") || "null");

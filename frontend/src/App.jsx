@@ -5,6 +5,7 @@ import Homepage from "./components/Homepage/Homepage.jsx";
 import Loginpage from "./components/Loginpage/Loginpage.jsx";
 import Profilepage from "./components/Profilepage/Profilepage.jsx";
 import Upload from "./components/Upload/Upload.jsx";
+import Register from "./components/Registerpage/Registerpage.jsx";
 function App() {
   return (
     <Router>
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/profile" element={<Profilepage />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
     );

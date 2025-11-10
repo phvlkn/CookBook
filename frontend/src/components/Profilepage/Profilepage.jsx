@@ -5,7 +5,7 @@ import "./Profilepage.css";
 function Profilepage() {
   // данные пользователя (в будущем можно получать из API)
   const user = {
-    name: "Nikita",
+    name: "Username",
     avatar: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
   };
 
