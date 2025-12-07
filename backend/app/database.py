@@ -20,7 +20,9 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://postgres:postgres@db:5432/cookbook",
+    # Default to localhost for local dev (Postgres.app or local container bound to 5432).
+    # When running inside docker-compose the env var should be set to use host `db`.
+    "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/cookbook",
 )
 
 Base = declarative_base()

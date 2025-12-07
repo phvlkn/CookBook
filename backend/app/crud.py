@@ -84,18 +84,60 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
             )
         )
     db.commit()
-    return db_recipe
+    # Return serialized recipe matching response schema (include ingredient quantity/unit)
+    return serialize_recipe(db, db_recipe)
 
 
 def get_all_recipes(db: Session, skip: int = 0, limit: int = 50):
-    return db.query(Recipe).offset(skip).limit(limit).all()
+    recipes = db.query(Recipe).offset(skip).limit(limit).all()
+    return [serialize_recipe(db, r) for r in recipes]
 
 
 def get_recipe_by_id(db: Session, recipe_id: int):
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Рецепт не найден")
-    return recipe
+    return serialize_recipe(db, recipe)
+
+
+def serialize_recipe(db: Session, recipe: Recipe):
+    """Serialize Recipe ORM to a dict compatible with RecipeResponse.
+
+    Ingredients' quantity and unit are stored in the association table `recipe_ingredients`.
+    We pull those rows and combine with Ingredient.name/default_unit.
+    """
+    # fetch association rows
+    rows = db.execute(RecipeIngredients.select().where(RecipeIngredients.c.recipe_id == recipe.id)).mappings().all()
+    ingredients_list = []
+    for r in rows:
+        ing = db.query(Ingredient).filter(Ingredient.id == r['ingredient_id']).first()
+        if not ing:
+            continue
+        try:
+            qty = float(r.get('quantity') or 0)
+        except Exception:
+            qty = 0.0
+        ingredients_list.append({
+            'name': ing.name,
+            'quantity': qty,
+            'unit': r.get('unit') or ing.default_unit or 'г',
+        })
+
+    return {
+        'id': recipe.id,
+        'author_id': recipe.author_id,
+        'title': recipe.title,
+        'description': recipe.description,
+        'cook_time': recipe.cook_time,
+        'category': recipe.category,
+        'diet': recipe.diet,
+        'cuisine': recipe.cuisine,
+        'steps': recipe.steps,
+        'ingredients': ingredients_list,
+        'image': recipe.image,
+        'rating_avg': recipe.rating_avg,
+        'created_at': recipe.created_at,
+    }
 
 
 def delete_recipe(db: Session, recipe_id: int, user_id: int):
