@@ -1,6 +1,7 @@
 # backend/app/crud.py
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from passlib.hash import pbkdf2_sha256
@@ -90,6 +91,38 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
 
 def get_all_recipes(db: Session, skip: int = 0, limit: int = 50):
     recipes = db.query(Recipe).offset(skip).limit(limit).all()
+    return [serialize_recipe(db, r) for r in recipes]
+
+
+def search_recipes(db: Session, q: str, skip: int = 0, limit: int = 50):
+    """Search recipes by title/description/category/cuisine and ingredient name.
+
+    Uses ILIKE pattern matching. Returns serialized recipes.
+    """
+    if not q:
+        return get_all_recipes(db, skip=skip, limit=limit)
+
+    pattern = f"%{q}%"
+    # Join through the association table to include ingredient name matches
+    query = (
+        db.query(Recipe)
+        .outerjoin(RecipeIngredients, Recipe.id == RecipeIngredients.c.recipe_id)
+        .outerjoin(Ingredient, Ingredient.id == RecipeIngredients.c.ingredient_id)
+        .filter(
+            or_(
+                Recipe.title.ilike(pattern),
+                Recipe.description.ilike(pattern),
+                Recipe.category.ilike(pattern),
+                Recipe.cuisine.ilike(pattern),
+                Ingredient.name.ilike(pattern),
+            )
+        )
+        .distinct()
+        .offset(skip)
+        .limit(limit)
+    )
+
+    recipes = query.all()
     return [serialize_recipe(db, r) for r in recipes]
 
 

@@ -25,6 +25,7 @@ from schemas import (
 from crud import (
     create_user,
     create_recipe,
+    search_recipes,
     get_all_recipes,
     get_recipe_by_id,
     delete_recipe,
@@ -54,6 +55,12 @@ async def read_recipes():
 def list_recipes(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     """Return a paginated list of recipes"""
     return get_all_recipes(db, skip=skip, limit=limit)
+
+
+@app.get("/api/recipes/search", response_model=List[RecipeResponse], tags=["Recipes"], summary="Search recipes")
+def search_recipes_endpoint(q: str, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    """Search recipes by query string across title/description/category/cuisine and ingredients."""
+    return search_recipes(db, q=q, skip=skip, limit=limit)
 
 
 @app.post("/api/recipes", response_model=RecipeResponse, tags=["Recipes"], summary="Create recipe (JSON)")
