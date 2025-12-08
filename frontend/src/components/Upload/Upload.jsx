@@ -2,277 +2,310 @@ import React, { useState } from "react";
 import Header from "../Header/header.jsx";
 import "./Upload.css";
 import { useNavigate } from "react-router-dom";
+import { RecipeStorage, UserStorage } from "../../utils/storage.js";
 
 function Upload() {
   const navigate = useNavigate();
+  const currentUser = UserStorage.getCurrentUser();
+
+  // Redirect if not logged in
+  if (!currentUser) {
+    navigate("/login");
+    return null;
+  }
+
   const [title, setTitle] = useState("");
-  const [finishedImage, setFinishedImage] = useState(null); // file
-  const [finishedPreview, setFinishedPreview] = useState(null); // url
-  const [ingredients, setIngredients] = useState([]);
-  const [ingredientInput, setIngredientInput] = useState("");
-  const [time, setTime] = useState(30); // minutes
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Завтрак");
+  const [cookTime, setCookTime] = useState(30);
+  const [imageUrl, setImageUrl] = useState("");
+  const [ingredients, setIngredients] = useState([{ name: "", quantity: 1, unit: "г" }]);
+  const [steps, setSteps] = useState([{ order: 1, text: "" }]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [steps, setSteps] = useState([
-    { id: Date.now(), text: "", image: null, preview: null },
-  ]);
-
-  // Обработка изображения готового блюда
-  const handleFinishedImage = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFinishedImage(file);
-    setFinishedPreview(URL.createObjectURL(file));
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImageUrl(event.target.result); // base64 string
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  // Ингредиенты
-  const addIngredient = () => {
-    const val = ingredientInput.trim();
-    if (!val) return;
-    setIngredients((prev) => [...prev, val]);
-    setIngredientInput("");
+  const handleAddIngredient = () => {
+    setIngredients([...ingredients, { name: "", quantity: 1, unit: "г" }]);
   };
 
-  const removeIngredient = (index) => {
-    setIngredients((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveIngredient = (index) => {
+    setIngredients(ingredients.filter((_, i) => i !== index));
   };
 
-  // Шаги
-  const addStep = () => {
-    setSteps((prev) => [
-      ...prev,
-      { id: Date.now() + Math.random(), text: "", image: null, preview: null },
-    ]);
+  const handleIngredientChange = (index, field, value) => {
+    const newIngredients = [...ingredients];
+    newIngredients[index][field] = value;
+    setIngredients(newIngredients);
   };
 
-  const removeStep = (id) => {
-    setSteps((prev) => prev.filter((s) => s.id !== id));
+  const handleAddStep = () => {
+    setSteps([...steps, { order: steps.length + 1, text: "" }]);
   };
 
-  const handleStepChange = (id, field, value) => {
-    setSteps((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-    );
+  const handleRemoveStep = (index) => {
+    setSteps(steps.filter((_, i) => i !== index));
   };
 
-  const handleStepImage = (id, file) => {
-    setSteps((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, image: file, preview: file ? URL.createObjectURL(file) : null } : s
-      )
-    );
+  const handleStepChange = (index, value) => {
+    const newSteps = [...steps];
+    newSteps[index].text = value;
+    setSteps(newSteps);
   };
 
-  // Сохранение/публикация рецепта (пример — сохраняем в localStorage и выводим в консоль)
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
+    // Validation
     if (!title.trim()) {
-      alert("Добавьте название рецепта");
+      setError("Укажите название рецепта");
+      return;
+    }
+    if (!description.trim()) {
+      setError("Укажите описание рецепта");
+      return;
+    }
+    if (ingredients.some(ing => !ing.name.trim())) {
+      setError("Все ингредиенты должны иметь название");
+      return;
+    }
+    if (steps.some(step => !step.text.trim())) {
+      setError("Все шаги должны содержать описание");
       return;
     }
 
-    const recipe = {
-      id: Date.now(),
-      title,
-      ingredients,
-      time,
-      steps: steps.map((s, i) => ({
-        order: i + 1,
-        text: s.text,
-        // NOTE: для реальной загрузки на сервер нужно отправлять файлы через FormData.
-        imageName: s.image ? s.image.name : null,
-      })),
-      finishedImageName: finishedImage ? finishedImage.name : null,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Пример локального сохранения: собираем все рецепты в localStorage
-    const stored = JSON.parse(localStorage.getItem("recipes") || "[]");
-    stored.unshift(recipe);
-    localStorage.setItem("recipes", JSON.stringify(stored));
-
-    console.log("Сохранён рецепт (заглушка):", recipe);
-
-    // Если хочешь отправить на сервер — пример (раскомментируй и доработай URL):
-    
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("time", time);
-    formData.append("ingredients", JSON.stringify(ingredients));
-    formData.append("finishedImage", finishedImage);
-    steps.forEach((s, idx) => {
-      formData.append(`steps[${idx}][text]`, s.text);
-      if (s.image) formData.append(`steps[${idx}][image]`, s.image);
-    });
-
     try {
-      const res = await fetch("https://your-api.com/recipes", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Ошибка при отправке");
-      const data = await res.json();
-      console.log("Ответ сервера:", data);
-    } catch (err) {
-      console.error(err);
-    }
-    
+      const newRecipe = RecipeStorage.createRecipe(
+        title,
+        description,
+        parseInt(cookTime),
+        category,
+        ingredients,
+        steps,
+        imageUrl || null,
+        currentUser.id
+      );
 
-    // После сохранения можно перейти на страницу профиля:
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (user?.id) {
-      navigate(`/profile/${user.id}`);
-    } else {
-      // если пользователь не в системе — на главную
-      navigate("/");
+      setSuccess("✅ Рецепт опубликован! Переводим вас...");
+      setTimeout(() => {
+        navigate(`/recipe/${newRecipe.id}`);
+      }, 1000);
+    } catch (err) {
+      setError("Ошибка при сохранении рецепта: " + err.message);
     }
   };
+
+  const categories = ["Завтрак", "Обед", "Ужин", "Десерт", "Салат", "Суп", "Паста", "Мясо", "Пицца"];
+  const units = ["г", "мл", "шт", "стакан", "ложка", "щепотка", "кг"];
 
   return (
     <>
       <Header />
       <div className="upload-container">
-        <h1>Создать рецепт</h1>
+        <h1>📝 Создать рецепт</h1>
 
-        <form className="upload-form" onSubmit={handleSubmit}>
-          {/* Название */}
-          <label className="field">
-            <span className="label-title">Название</span>
-            <input
-              type="text"
-              className="text-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Введите название рецепта"
-            />
-          </label>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
-          {/* Готовое блюдо */}
-          <label className="field">
-            <span className="label-title">Фото готового блюда</span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFinishedImage}
-            />
-            {finishedPreview && (
-              <div className="image-preview">
-                <img src={finishedPreview} alt="finished preview" />
-              </div>
-            )}
-          </label>
+        <form onSubmit={handleSubmit} className="upload-form">
+          {/* ОСНОВНАЯ ИНФОРМАЦИЯ */}
+          <div className="form-section">
+            <div className="section-title">🍽️ Основная информация</div>
 
-          {/* Ингредиенты */}
-          <div className="field">
-            <span className="label-title">Ингредиенты</span>
-            <div className="ingredient-row">
+            <div className="field">
+              <label className="label-title">Название рецепта *</label>
               <input
                 type="text"
-                value={ingredientInput}
-                onChange={(e) => setIngredientInput(e.target.value)}
-                placeholder="Добавить ингредиент"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addIngredient();
-                  }
-                }}
+                className="text-input"
+                placeholder="Например: Паста Карбонара"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
               />
-              <button type="button" className="add-small" onClick={addIngredient}>
-                Добавить
-              </button>
             </div>
 
-            <ul className="ingredient-list">
-              {ingredients.map((ing, i) => (
-                <li key={i} className="ingredient-item">
-                  <span>{ing}</span>
+            <div className="field">
+              <label className="label-title">Описание *</label>
+              <textarea
+                className="text-input"
+                placeholder="Расскажите о вашем рецепте..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div className="field">
+                <label className="label-title">Категория</label>
+                <select
+                  className="text-input"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label className="label-title">Время приготовления (мин)</label>
+                <input
+                  type="number"
+                  className="text-input"
+                  value={cookTime}
+                  onChange={(e) => setCookTime(e.target.value)}
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label className="label-title">Ссылка на изображение</label>
+                <input
+                  type="text"
+                  className="text-input"
+                  placeholder="https://example.com/image.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label-title">Или загрузите фото</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="text-input"
+              />
+            </div>
+
+            {imageUrl && (
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ marginBottom: '8px' }}>Предпросмотр:</p>
+                <img
+                  src={imageUrl}
+                  alt="preview"
+                  className="image-preview"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* ИНГРЕДИЕНТЫ */}
+          <div className="form-section">
+            <div className="section-title">🥘 Ингредиенты</div>
+
+            {ingredients.map((ing, index) => (
+              <div key={index} className="ingredient-row">
+                <input
+                  type="text"
+                  placeholder="Название ингредиента"
+                  value={ing.name}
+                  onChange={(e) => handleIngredientChange(index, "name", e.target.value)}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Количество"
+                  value={ing.quantity}
+                  onChange={(e) => handleIngredientChange(index, "quantity", parseFloat(e.target.value))}
+                  min="0.1"
+                  step="0.1"
+                />
+                <select
+                  value={ing.unit}
+                  onChange={(e) => handleIngredientChange(index, "unit", e.target.value)}
+                >
+                  {units.map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+                {ingredients.length > 1 && (
                   <button
                     type="button"
-                    className="remove-small"
-                    onClick={() => removeIngredient(i)}
+                    onClick={() => handleRemoveIngredient(index)}
+                    className="remove-btn"
                   >
-                    ×
+                    ✕ Удалить
                   </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+                )}
+              </div>
+            ))}
 
-          {/* Время */}
-          <label className="field">
-            <span className="label-title">Время приготовления: {time} мин</span>
-            <input
-              type="range"
-              min="1"
-              max="300"
-              value={time}
-              onChange={(e) => setTime(Number(e.target.value))}
-            />
-          </label>
-
-          {/* Шаги */}
-          <div className="field">
-            <div className="steps-header">
-              <span className="label-title">Шаги приготовления</span>
-              <button type="button" className="add-step-btn" onClick={addStep}>
-                + Добавить шаг
-              </button>
-            </div>
-
-            <div className="steps-list">
-              {steps.map((s, idx) => (
-                <div key={s.id} className="step-card">
-                  <div className="step-top">
-                    <strong>Шаг {idx + 1}</strong>
-                    <button
-                      type="button"
-                      className="remove-step"
-                      onClick={() => removeStep(s.id)}
-                      aria-label={`Удалить шаг ${idx + 1}`}
-                    >
-                      Удалить
-                    </button>
-                  </div>
-
-                  <textarea
-                    placeholder="Опиши этот шаг..."
-                    value={s.text}
-                    onChange={(e) => handleStepChange(s.id, "text", e.target.value)}
-                  />
-
-                  <div className="step-image-row">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleStepImage(s.id, e.target.files?.[0] || null)}
-                    />
-                    {s.preview && (
-                      <div className="image-preview small">
-                        <img src={s.preview} alt={`step ${idx + 1}`} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="actions-row">
-            <button type="submit" className="publish-btn">Опубликовать</button>
             <button
               type="button"
-              className="cancel-btn"
-              onClick={() => {
-                // откат формы
-                if (window.confirm("Отменить и вернуться назад?")) {
-                  navigate(-1);
-                }
-              }}
+              onClick={handleAddIngredient}
+              className="add-ingredient-btn"
             >
-              Отмена
+              + Добавить ингредиент
             </button>
           </div>
+
+          {/* ШАГИ */}
+          <div className="form-section">
+            <div className="section-title">👨‍🍳 Шаги приготовления</div>
+
+            {steps.map((step, index) => (
+              <div key={index} className="step-row">
+                <span style={{
+                  fontWeight: '700',
+                  color: '#ff6b6b',
+                  marginTop: '14px',
+                  minWidth: '30px',
+                  fontSize: '1.1rem'
+                }}>
+                  {index + 1}.
+                </span>
+                <textarea
+                  placeholder="Описание шага приготовления..."
+                  value={step.text}
+                  onChange={(e) => handleStepChange(index, e.target.value)}
+                  required
+                />
+                {steps.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveStep(index)}
+                    className="remove-btn"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={handleAddStep}
+              className="add-step-btn"
+            >
+              + Добавить шаг
+            </button>
+          </div>
+
+          {/* КНОПКА ОТПРАВКИ */}
+          <button type="submit" className="submit-btn">
+            🚀 Опубликовать рецепт
+          </button>
         </form>
       </div>
     </>

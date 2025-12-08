@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Header.css";
 import { Link, useNavigate } from "react-router-dom";
+import { UserStorage } from "../../utils/storage.js";
 
 const defaultAvatar = "/default-avatar.png";
 
-function Header() {
+function Header({ onSearch }) {
   const [query, setQuery] = useState("");
   const [loggedUser, setLoggedUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,7 +13,7 @@ function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const user = UserStorage.getCurrentUser();
     setLoggedUser(user);
   }, []);
 
@@ -37,24 +38,36 @@ function Header() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
+    UserStorage.logout();
     setLoggedUser(null);
     setMenuOpen(false);
-    navigate("/login");
+    navigate("/");
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(query);
+    }
   };
 
   return (
     <header className="header">
-      <a href="/">
-        <h1 className="logo">Recipes</h1>
-      </a>
+      <Link to="/">
+        <h1 className="logo">Поваренная<br/>книга</h1>
+      </Link>
 
-      <form className="search" onSubmit={(e) => e.preventDefault()}>
+      <form className="search" onSubmit={handleSearchSubmit}>
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Поиск рецептов..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleSearch}
         />
       </form>
 
@@ -69,7 +82,7 @@ function Header() {
     }
   }}
 >
-  Upload
+  Добавить рецепт
 </button>
 
 
@@ -86,7 +99,7 @@ function Header() {
             <button
               className="avatar-menu-item"
               onClick={() => {
-                navigate(`/profile/${loggedUser.email}`);
+                navigate(`/profile/${loggedUser.id}`);
                 setMenuOpen(false);
               }}
             >
@@ -94,7 +107,7 @@ function Header() {
             </button>
 
             <button className="avatar-menu-item logout" onClick={handleLogout}>
-              Logout
+              Выход
             </button>
           </div>
         )}

@@ -1,97 +1,263 @@
 .upload-container {
-  padding: 110px 40px 60px; /* учитываем фиксированный Header */
-  max-width: 1000px;
+  padding: 110px 20px 60px;
+  max-width: 900px;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
 .upload-container h1 {
   text-align: center;
-  margin-bottom: 24px;
-  font-size: 2rem;
-  color: #000;
+  margin-bottom: 40px;
+  font-size: 2.5rem;
+  color: #2c2c2c;
+  font-weight: 700;
 }
 
-/* Форма */
+/* Основная форма */
 .upload-form {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  color: #000;
+  gap: 28px;
+  color: #2c2c2c;
 }
 
-/* Поля */
+/* Поля формы */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: #000;
+  gap: 10px;
 }
 
 .label-title {
-  font-weight: 600;
-  color: #222;
+  font-weight: 700;
+  color: #2c2c2c;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* Текстовые инпуты */
+/* Инпуты и текстареа */
 .text-input,
 .field input[type="text"],
+.field input[type="number"],
+.field select,
 .field textarea {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: none;
-  background: #f0f0f0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  background: #fff;
   font-size: 1rem;
   outline: none;
-  resize: vertical;
-  color: #000;
+  transition: all 0.3s ease;
+  color: #2c2c2c;
+  font-family: inherit;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+  background: #fff;
 }
 
 .field textarea {
-  min-height: 80px;
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
 }
 
-/* Кнопки добавления (маленькие) */
+/* Строки ингредиентов */
 .ingredient-row {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-end;
+  background: #f8f9fa;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
 }
 
 .ingredient-row input[type="text"] {
-  flex: 1;
+  flex: 3;
+  margin: 0 !important;
+  border: 1px solid #d0d0d0 !important;
 }
 
-.add-small,
-.remove-small,
-.add-step-btn {
-  background: #dcdcdc;
-  border: none;
-  padding: 8px 12px;
+.ingredient-row input[type="number"] {
+  flex: 1;
+  margin: 0 !important;
+  border: 1px solid #d0d0d0 !important;
+}
+
+.ingredient-row select {
+  flex: 1;
+  margin: 0 !important;
+  border: 1px solid #d0d0d0 !important;
+}
+
+/* Строки шагов */
+.step-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #f8f9fa;
+  padding: 14px;
   border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.step-row textarea {
+  flex: 1;
+  margin: 0 !important;
+  border: 1px solid #d0d0d0 !important;
+  min-height: 80px;
+}
+
+/* Кнопки */
+.add-ingredient-btn,
+.add-step-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  margin-top: 8px;
 }
 
-.add-small:hover,
+.add-ingredient-btn:hover,
 .add-step-btn:hover {
-  background: #c8c8c8;
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.remove-small {
-  margin-left: 10px;
-  padding: 6px 10px;
+/* Кнопка удаления */
+.remove-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
-/* Список ингредиентов */
-.ingredient-list {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0 0;
+.remove-btn:hover {
+  background: #ff5252;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+/* Кнопка отправки */
+.submit-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+.submit-btn:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #ff3838 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+/* Сообщения об ошибках и успехе */
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid #c62828;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.success-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid #2e7d32;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* Секции */
+.form-section {
+  border-top: 2px solid #e0e0e0;
+  padding-top: 28px;
+  margin-top: 20px;
+}
+
+.form-section:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2c2c2c;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Preview картинки */
+.image-preview {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+  margin-top: 10px;
+  object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 100px 15px 40px;
+  }
+
+  .upload-form {
+    padding: 25px;
+    gap: 20px;
+  }
+
+  .ingredient-row,
+  .step-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ingredient-row input,
+  .ingredient-row select,
+  .step-row textarea {
+    width: 100% !important;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+    padding: 14px 28px;
+  }
+}
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
