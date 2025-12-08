@@ -1,0 +1,75 @@
+.recipe-container {
+  margin-top: 100px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #000;
+}
+
+.back-btn {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  cursor: pointer;
+  color: #000;
+}
+
+.recipe-card {
+  display: flex;
+  gap: 30px;
+  max-width: 900px;
+  width: 100%;
+  background: #fff;
+}
+
+.recipe-image {
+  width: 400px;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.recipe-content {
+  flex: 1;
+}
+
+.recipe-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.meta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.ingredient-list,
+.steps-list {
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.act-btn {
+  background: #dcdcdc;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.act-btn:hover {
+  background: #c8c8c8;
+}

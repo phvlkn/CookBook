@@ -1,0 +1,159 @@
+/* Фиксируем header сверху */
+.header {
+  box-sizing: border-box;
+  position: fixed;              /* фиксирует header */
+  top: 0;
+  left: 0;
+  width: 100%;                  /* растягивает на всю ширину экрана */
+  z-index: 1000;                /* чтобы был поверх других элементов */
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f4f4f4;
+  padding: 0px 40px;
+  border-top: 6px solid #2b2b2b; /* тёмная полоска сверху */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* лёгкая тень */
+}
+
+/* Логотип */
+.logo {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #000;
+  margin-right: 40px;
+  white-space: nowrap; /* чтобы не переносился на новую строку */
+}
+
+/* Поисковая строка */
+.search {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search input {
+  width: 90%;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  background-color: #dcdcdc;
+  font-size: 1rem;
+  outline: none;
+  color: #000;
+}
+
+.search input::placeholder {
+  color: #666;
+}
+
+/* Блок с кнопкой и профилем */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.add-btn {
+  background-color: #dcdcdc;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #000;
+}
+
+.add-btn:hover {
+  background-color: #c8c8c8;
+}
+
+.profile-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #dcdcdc;
+  object-fit: cover;
+  cursor: pointer;
+}
+/* Сбрасываем стиль кнопки для аватара */
+.avatar-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Аватар */
+.profile-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #dcdcdc;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+/* Эффект наведения */
+.profile-img:hover {
+  transform: scale(1.05);
+}
+/* Контейнер кнопки и меню */
+.actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Кнопка-аватар */
+.avatar-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Выпадающее меню */
+.avatar-menu {
+  position: absolute;
+  top: 60px; /* под аватаром */
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  overflow: hidden;
+  z-index: 2000;
+}
+
+/* Кнопки в меню */
+.avatar-menu-item {
+  padding: 12px 18px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #000;
+  transition: background 0.15s;
+}
+
+.avatar-menu-item:hover {
+  background: #f0f0f0;
+}
+
+/* Logout — красным при наведении */
+.avatar-menu-item.logout:hover {
+  background: #ffebeb;
+  color: #d60000;
+}
+

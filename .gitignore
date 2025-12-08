@@ -1,0 +1,25 @@
+.DS_Store
+# Виртуальное окружение
+.venv/
+venv/
+env/
+# Питоновский кэш
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+# VS Code
+.vscode/
+# Environment variables - НЕ КОММИТИМ ПАРОЛИ!
+.env
+.env.local
+# Логи
+*.log
+logs/
+# Базы данных
+*.db
+*.sqlite3
+# Временные файлы
+temp/
+tmp/
+/frontend/node_modules/
