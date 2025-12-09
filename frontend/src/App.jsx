@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Header/header.jsx";
+import Header from "./components/Header/Header.jsx";
 import Homepage from "./components/Homepage/Homepage.jsx";
 import Loginpage from "./components/Loginpage/Loginpage.jsx";
 import Profilepage from "./components/Profilepage/Profilepage.jsx";

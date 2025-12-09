@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { UserStorage } from "../../utils/storage.js";
+import { ApiClient } from "../../utils/storage.js";
 
 function Registerpage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [avatar, setAvatar] = useState("/default-avatar.png");
+  const [avatarPreview, setAvatarPreview] = useState("/default-avatar.png");
+  const [avatarFile, setAvatarFile] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
@@ -15,15 +16,12 @@ function Registerpage() {
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAvatar(event.target.result); // base64 string
-      };
-      reader.readAsDataURL(file);
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -41,9 +39,19 @@ function Registerpage() {
     }
 
     try {
-      UserStorage.registerUser(email, password, username, avatar);
-      setSuccess("Аккаунт успешно создан! Теперь войдите.");
-      setTimeout(() => navigate("/login"), 1500);
+      let avatarUrl = null;
+      if (avatarFile) {
+        const uploadResult = await ApiClient.uploadAvatar(avatarFile);
+        avatarUrl = uploadResult.url;
+      }
+      await ApiClient.register({
+        email,
+        username,
+        password,
+        avatar: avatarUrl,
+      });
+      await ApiClient.login(email, password);
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
@@ -93,7 +101,7 @@ function Registerpage() {
             required
           />
 
-          <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '10px' }}>
+            <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '10px' }}>
             <label style={{ display: 'block', marginBottom: '10px', fontWeight: '600', fontSize: '0.9rem' }}>
               Загрузить аватарку (опционально)
             </label>
@@ -103,9 +111,9 @@ function Registerpage() {
               onChange={handleAvatarUpload}
               style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }}
             />
-            {avatar !== "/default-avatar.png" && (
+            {avatarPreview !== "/default-avatar.png" && (
               <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                <img src={avatar} alt="preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+                <img src={avatarPreview} alt="preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
               </div>
             )}
           </div>

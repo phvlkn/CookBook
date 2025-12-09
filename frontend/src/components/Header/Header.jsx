@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Header.css";
 import { Link, useNavigate } from "react-router-dom";
-import { UserStorage } from "../../utils/storage.js";
+import { ApiAuth } from "../../utils/storage.js";
 
 const defaultAvatar = "/default-avatar.png";
 
@@ -13,8 +13,10 @@ function Header({ onSearch }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = UserStorage.getCurrentUser();
-    setLoggedUser(user);
+    const syncUser = () => setLoggedUser(ApiAuth.getCurrentUser());
+    syncUser();
+    window.addEventListener('cookbook-auth-changed', syncUser);
+    return () => window.removeEventListener('cookbook-auth-changed', syncUser);
   }, []);
 
   // Закрытие меню при клике вне
@@ -38,7 +40,7 @@ function Header({ onSearch }) {
   };
 
   const handleLogout = () => {
-    UserStorage.logout();
+    ApiAuth.logout();
     setLoggedUser(null);
     setMenuOpen(false);
     navigate("/");

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "../Header/header.jsx";
+import Header from "../Header/Header.jsx";
 import "./Profilepage.css";
-import { UserStorage, RecipeStorage } from "../../utils/storage.js";
+import { ApiClient, ApiAuth } from "../../utils/storage.js";
 
 function Profilepage() {
   const { id } = useParams();
@@ -10,31 +10,51 @@ function Profilepage() {
   const [user, setUser] = useState(null);
   const [userRecipes, setUserRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const currentUser = UserStorage.getCurrentUser();
+  const [loadError, setLoadError] = useState("");
+  const currentUser = ApiAuth.getCurrentUser();
 
   useEffect(() => {
-    // Find user by ID
-    const userId = parseInt(id);
-    const allUsers = UserStorage.getUsers();
-    const foundUser = allUsers.find(u => u.id === userId);
+    let mounted = true;
+    const fetchProfile = async () => {
+      setLoading(true);
+      setLoadError("");
+      try {
+        const userId = parseInt(id);
+        const [userData, recipes] = await Promise.all([
+          ApiClient.fetchUserById(userId),
+          ApiClient.fetchUserRecipes(userId, { skip: 0, limit: 50 }),
+        ]);
+        if (!mounted) return;
+        setUser(userData);
+        setUserRecipes(recipes);
+      } catch (err) {
+        console.error("Failed to load profile", err);
+        if (mounted) {
+          setUser(null);
+          setLoadError(err.message || "Пользователь не найден");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+    fetchProfile();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
-    if (!foundUser) {
-      navigate("/");
+  const handleDeleteRecipe = async (recipeId) => {
+    if (!window.confirm("Вы уверены, что хотите удалить этот рецепт?")) {
       return;
     }
-
-    setUser(foundUser);
-
-    // Get user's recipes
-    const recipes = RecipeStorage.getRecipesByUser(userId);
-    setUserRecipes(recipes);
-    setLoading(false);
-  }, [id, navigate]);
-
-  const handleDeleteRecipe = (recipeId) => {
-    if (window.confirm("Вы уверены, что хотите удалить этот рецепт?")) {
-      RecipeStorage.deleteRecipe(recipeId);
-      setUserRecipes(userRecipes.filter(r => r.id !== recipeId));
+    try {
+      await ApiClient.deleteRecipe(recipeId);
+      setUserRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    } catch (err) {
+      console.error("Failed to delete recipe", err);
+      alert(err.message || "Не удалось удалить рецепт");
     }
   };
 
@@ -54,7 +74,7 @@ function Profilepage() {
       <>
         <Header />
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p>Пользователь не найден</p>
+          <p>{loadError || 'Пользователь не найден'}</p>
         </div>
       </>
     );
@@ -94,8 +114,8 @@ function Profilepage() {
                   </a>
                   <div className="recipe-details">
                     <h4>{recipe.title}</h4>
-                    <p>{recipe.category} • ⏱️ {recipe.cookTime} мин</p>
-                    <p className="recipe-rating">⭐ {recipe.rating ? recipe.rating.toFixed(1) : 'Нет оценок'}</p>
+                    <p>{recipe.category} • ⏱️ {recipe.cook_time} мин</p>
+                    <p className="recipe-rating">⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}</p>
                     {isOwnProfile && (
                       <div className="recipe-actions">
                         <button

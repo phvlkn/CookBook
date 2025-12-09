@@ -1,31 +1,42 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./Homepage.css";
-import Header from "../Header/header.jsx";
-import { RecipeStorage } from "../../utils/storage.js";
+import Header from "../Header/Header.jsx";
+import { ApiClient } from "../../utils/storage.js";
 import { Link } from "react-router-dom";
 
 function Homepage() {
   const [recipes, setRecipes] = useState([]);
-  const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchRecipes = async (query = "") => {
+    setLoading(true);
+    try {
+      const data = query
+        ? await ApiClient.searchRecipes(query, { skip: 0, limit: 50 })
+        : await ApiClient.fetchRecipes({ skip: 0, limit: 50 });
+      setRecipes(data);
+    } catch (error) {
+      console.error("Failed to fetch recipes", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Load recipes from localStorage
-    const allRecipes = RecipeStorage.getRecipes();
-    console.log('📋 Loaded recipes:', allRecipes.length, allRecipes);
-    setRecipes(allRecipes);
-    setFilteredRecipes(allRecipes);
+    fetchRecipes();
   }, []);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchRecipes(searchQuery);
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
 
   // Handle search
   const handleSearch = (query) => {
     setSearchQuery(query);
-    if (query.trim() === "") {
-      setFilteredRecipes(recipes);
-    } else {
-      const results = RecipeStorage.searchRecipes(query);
-      setFilteredRecipes(results);
-    }
   };
 
   // Generate consistent placeholder image for recipe
@@ -41,8 +52,12 @@ function Homepage() {
       <div className="container">
         <h1>Рецепты</h1>
         <div className="grid">
-          {filteredRecipes.length > 0 ? (
-            filteredRecipes.map((recipe) => (
+          {loading ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+              <p>Загрузка...</p>
+            </div>
+          ) : recipes.length > 0 ? (
+            recipes.map((recipe) => (
               <div key={recipe.id} className="pin">
                 <Link to={`/recipe/${recipe.id}`}>
                   <img
@@ -57,9 +72,9 @@ function Homepage() {
                 <div className="pin-content">
                   <h3>{recipe.title}</h3>
                   <p className="pin-category">{recipe.category}</p>
-                  <p className="pin-time">⏱️ {recipe.cookTime} мин</p>
+                  <p className="pin-time">⏱️ {recipe.cook_time} мин</p>
                   <div className="pin-rating">
-                    ⭐ {recipe.rating ? recipe.rating.toFixed(1) : 'Нет оценок'}
+                    ⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}
                   </div>
                 </div>
               </div>

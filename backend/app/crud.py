@@ -23,6 +23,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         email=user.email,
         username=user.username,
         password_hash=hashed_password,
+            avatar=user.avatar,
     )
     try:
         db.add(db_user)
@@ -90,8 +91,25 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate, author_id: int):
 
 
 def get_all_recipes(db: Session, skip: int = 0, limit: int = 50):
-    recipes = db.query(Recipe).offset(skip).limit(limit).all()
+    recipes = (
+        db.query(Recipe)
+        .order_by(Recipe.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return [serialize_recipe(db, r) for r in recipes]
+
+
+def get_recipes_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 50):
+    query = (
+        db.query(Recipe)
+        .filter(Recipe.author_id == user_id)
+        .order_by(Recipe.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return [serialize_recipe(db, r) for r in query.all()]
 
 
 def search_recipes(db: Session, q: str, skip: int = 0, limit: int = 50):
@@ -118,6 +136,7 @@ def search_recipes(db: Session, q: str, skip: int = 0, limit: int = 50):
             )
         )
         .distinct()
+        .order_by(Recipe.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -174,7 +193,9 @@ def serialize_recipe(db: Session, recipe: Recipe):
 
 
 def delete_recipe(db: Session, recipe_id: int, user_id: int):
-    recipe = get_recipe_by_id(db, recipe_id)
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Рецепт не найден")
     if recipe.author_id != user_id:
         raise HTTPException(status_code=403, detail="Нет прав на удаление рецепта")
     db.delete(recipe)

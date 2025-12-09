@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { UserStorage } from "../../utils/storage.js";
+import { ApiClient } from "../../utils/storage.js";
 import "./Loginpage.css";
 
 function Loginpage() {
@@ -10,12 +10,12 @@ function Loginpage() {
   const navigate = useNavigate();
 
   // Функция входа
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      UserStorage.loginUser(email, password);
+      await ApiClient.login(email, password);
       navigate("/");
     } catch (err) {
       setError(err.message);

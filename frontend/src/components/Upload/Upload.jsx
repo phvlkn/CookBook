@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import Header from "../Header/header.jsx";
+import Header from "../Header/Header.jsx";
 import "./Upload.css";
 import { useNavigate } from "react-router-dom";
-import { RecipeStorage, UserStorage } from "../../utils/storage.js";
+import { ApiClient, ApiAuth } from "../../utils/storage.js";
 
 function Upload() {
   const navigate = useNavigate();
-  const currentUser = UserStorage.getCurrentUser();
+  const currentUser = ApiAuth.getCurrentUser();
 
   // Redirect if not logged in
   if (!currentUser) {
@@ -19,6 +19,7 @@ function Upload() {
   const [category, setCategory] = useState("Завтрак");
   const [cookTime, setCookTime] = useState(30);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [ingredients, setIngredients] = useState([{ name: "", quantity: 1, unit: "г" }]);
   const [steps, setSteps] = useState([{ order: 1, text: "" }]);
   const [error, setError] = useState("");
@@ -27,11 +28,8 @@ function Upload() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImageUrl(event.target.result); // base64 string
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
+      setImageUrl(URL.createObjectURL(file));
     }
   };
 
@@ -63,7 +61,7 @@ function Upload() {
     setSteps(newSteps);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -77,33 +75,39 @@ function Upload() {
       setError("Укажите описание рецепта");
       return;
     }
-    if (ingredients.some(ing => !ing.name.trim())) {
+    if (ingredients.some((ing) => !ing.name.trim())) {
       setError("Все ингредиенты должны иметь название");
       return;
     }
-    if (steps.some(step => !step.text.trim())) {
+    if (steps.some((step) => !step.text.trim())) {
       setError("Все шаги должны содержать описание");
       return;
     }
 
-    try {
-      const newRecipe = RecipeStorage.createRecipe(
-        title,
-        description,
-        parseInt(cookTime),
-        category,
-        ingredients,
-        steps,
-        imageUrl || null,
-        currentUser.id
-      );
+    const payload = {
+      title: title.trim(),
+      description: description.trim(),
+      cook_time: parseInt(cookTime, 10) || 0,
+      category,
+      steps: steps.map((step, index) => ({ order: index + 1, text: step.text.trim() })),
+      ingredients: ingredients.map((ing) => ({
+        name: ing.name.trim(),
+        quantity: Number(ing.quantity) || 0,
+        unit: ing.unit,
+      })),
+    };
+    if (imageUrl && !imageFile) {
+      payload.image = imageUrl;
+    }
 
-      setSuccess("✅ Рецепт опубликован! Переводим вас...");
+    try {
+      const created = await ApiClient.uploadRecipe(payload, imageFile);
+      setSuccess("✅ Рецепт опубликован! Перенаправляем...");
       setTimeout(() => {
-        navigate(`/recipe/${newRecipe.id}`);
+        navigate(`/recipe/${created.id}`);
       }, 1000);
     } catch (err) {
-      setError("Ошибка при сохранении рецепта: " + err.message);
+      setError(err.message || "Ошибка при сохранении рецепта");
     }
   };
 
@@ -180,7 +184,10 @@ function Upload() {
                   className="text-input"
                   placeholder="https://example.com/image.jpg"
                   value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
+                  onChange={(e) => {
+                    setImageUrl(e.target.value);
+                    setImageFile(null);
+                  }}
                 />
               </div>
             </div>
