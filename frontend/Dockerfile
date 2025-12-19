@@ -8,6 +8,8 @@ RUN npm ci
 
 # copy sources and build
 COPY . ./
+# ensure build tools in node_modules/.bin are executable
+RUN chmod +x ./node_modules/.bin/vite || true
 RUN npm run build
 
 FROM nginx:stable-alpine
