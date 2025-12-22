@@ -1,63 +1,89 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./Homepage.css";
-import Header from "../Header/header.jsx";
-
-// функция для генерации случайных изображений
-const generatePins = (count = 10, start = 1) => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: start + i,
-    image: `https://picsum.photos/300/${300 + Math.floor(Math.random() * 200)}?random=${start + i}`,
-    title: `Pin ${start + i}`,
-  }));
-};
+import Header from "../Header/Header.jsx";
+import { ApiClient } from "../../utils/storage.js";
+import { Link } from "react-router-dom";
 
 function Homepage() {
-  const [pins, setPins] = useState(generatePins(10));
-  const [page, setPage] = useState(1);
-  const loader = useRef(null); // наблюдатель за последним элементом
+  const [recipes, setRecipes] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Подгрузка новых изображений при изменении page
+  const fetchRecipes = async (query = "") => {
+    setLoading(true);
+    try {
+      const data = query
+        ? await ApiClient.searchRecipes(query, { skip: 0, limit: 50 })
+        : await ApiClient.fetchRecipes({ skip: 0, limit: 50 });
+      setRecipes(data);
+    } catch (error) {
+      console.error("Failed to fetch recipes", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const newPins = generatePins(10, page * 10 + 1);
-    setPins((prev) => [...prev, ...newPins]);
-  }, [page]);
-
-  // Intersection Observer: следим, когда пользователь долистал до конца
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      { threshold: 1 }
-    );
-
-    if (loader.current) observer.observe(loader.current);
-
-    return () => {
-      if (loader.current) observer.unobserve(loader.current);
-    };
+    fetchRecipes();
   }, []);
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      fetchRecipes(searchQuery);
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
+
+  // Handle search
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  // Generate consistent placeholder image for recipe
+  const getPlaceholderImage = (recipeId) => {
+    // Use a consistent image based on recipe ID (not random)
+    const imageId = recipeId % 10 + 1; // Cycle through 10 different images
+    return;
+  };
 
   return (
     <>
-      <Header />
+      <Header onSearch={handleSearch} />
       <div className="container">
-        <h1>Pinterest Infinite Scroll</h1>
+        <h1>Рецепты</h1>
         <div className="grid">
-          {pins.map((pin) => (
-            <div key={pin.id} className="pin">
-              <a href={`/recipe/${pin.id}`}><img src={pin.image} alt={pin.title} loading="" /></a>
-              <p>{pin.title}</p>
-
+          {loading ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+              <p>Загрузка...</p>
             </div>
-          ))}
-        </div>
-
-        {/* Элемент, за которым наблюдает IntersectionObserver */}
-        <div ref={loader} className="loading">
-          <p>Загрузка...</p>
+          ) : recipes.length > 0 ? (
+            recipes.map((recipe) => (
+              <div key={recipe.id} className="pin">
+                <Link to={`/recipe/${recipe.id}`}>
+                  <img
+                    src={recipe.image || getPlaceholderImage(recipe.id)}
+                    alt={recipe.title}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.src = getPlaceholderImage(recipe.id);
+                    }}
+                  />
+                </Link>
+                <div className="pin-content">
+                  <h3>{recipe.title}</h3>
+                  <p className="pin-category">{recipe.category}</p>
+                  <p className="pin-time">⏱️ {recipe.cook_time} мин</p>
+                  {/* <div className="pin-rating">
+                    ⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}
+                  </div> */}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
+              <p>Рецептов не найдено</p>
+            </div>
+          )}
         </div>
       </div>
     </>

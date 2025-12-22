@@ -8,16 +8,17 @@
 }
 
 .title {
-  font-size: 2.8rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: #000;
   background-color: #f4f4f4;
   width: 100%;
-  text-align: center;
-  padding: 20px 0;
+  text-align: left;
+  padding: 20px 40px;
   margin-bottom: 80px;
   margin-top: 0;
   border: none;
+  line-height: 1.2;
 }
 
 .login-form {
@@ -25,25 +26,41 @@
   flex-direction: column;
   align-items: center;
   width: 300px;
-  gap: 15px;
+  gap: 20px;
+}
+
+.login-form form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
 }
 
 .input-field {
   width: 100%;
-  padding: 10px 15px;
+  padding: 14px 15px;
   border: none;
   border-radius: 20px;
   background-color: #dcdcdc;
-  
   font-size: 1rem;
   outline: none;
   color: #000;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease;
+}
+
+.input-field:focus {
+  background-color: #c8c8c8;
 }
 
 .password-container {
-      padding: 10px 45px 10px 15px;
   position: relative;
   width: 100%;
+}
+
+.password-container .input-field {
+  padding: 14px 15px;
 }
 
 .forgot-link {   
@@ -65,14 +82,19 @@
 .login-btn,
 .create-btn {
   width: 100%;
-  padding: 10px 0;
+  padding: 14px 0;
   border: none;
   border-radius: 20px;
   background-color: #000;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-btn:hover,

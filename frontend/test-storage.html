@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test LocalStorage</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Проверка localStorage</h1>
+  
+  <div class="section">
+    <h2>1. Статус localStorage</h2>
+    <button onclick="checkStorage()">Проверить хранилище</button>
+    <pre id="storage-output"></pre>
+  </div>
+
+  <div class="section">
+    <h2>2. Загрузить данные вручную</h2>
+    <button onclick="seedData()">Заполнить тестовые рецепты</button>
+    <p id="seed-status"></p>
+  </div>
+
+  <div class="section">
+    <h2>3. Все ключи в localStorage</h2>
+    <button onclick="listAllKeys()">Показать все ключи</button>
+    <pre id="keys-output"></pre>
+  </div>
+
+  <div class="section">
+    <h2>4. Очистить localStorage</h2>
+    <button onclick="clearAll()">⚠️ ОЧИСТИТЬ ВСЁ</button>
+    <p id="clear-status"></p>
+  </div>
+
+  <script>
+    function checkStorage() {
+      const recipes = localStorage.getItem('cookbook_recipes');
+      const users = localStorage.getItem('cookbook_users');
+      const loggedIn = localStorage.getItem('cookbook_loggedInUser');
+      
+      const output = `
+Recipes: ${recipes ? '✅ Есть (' + JSON.parse(recipes).length + ' шт)' : '❌ Пусто'}
+Users: ${users ? '✅ Есть (' + JSON.parse(users).length + ' шт)' : '❌ Пусто'}  
+Logged In User: ${loggedIn ? '✅ ' + JSON.parse(loggedIn).email : '❌ Не залогинен'}
+
+--- RECIPES ---
+${recipes ? JSON.stringify(JSON.parse(recipes).slice(0, 2), null, 2) : 'No recipes'}
+      `;
+      document.getElementById('storage-output').textContent = output;
+    }
+
+    function listAllKeys() {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        keys.push(`${key}: ${value.substring(0, 100)}...`);
+      }
+      document.getElementById('keys-output').textContent = keys.join('\n') || 'localStorage пуст';
+    }
+
+    function seedData() {
+      const sampleRecipes = [
+        {
+          id: 1,
+          title: 'Паста Карбонара',
+          description: 'Классическое итальянское блюдо',
+          cookTime: 20,
+          category: 'Паста',
+          ingredients: [{ name: 'Спагетти', quantity: 400, unit: 'г' }],
+          steps: [{ order: 1, text: 'Готовить' }],
+          image: null,
+          authorId: null,
+          rating: 4.8,
+          reviews: [],
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          title: 'Цезарь салат',
+          description: 'Свежий салат с курицей',
+          cookTime: 15,
+          category: 'Салат',
+          ingredients: [{ name: 'Салат', quantity: 300, unit: 'г' }],
+          steps: [{ order: 1, text: 'Смешать' }],
+          image: null,
+          authorId: null,
+          rating: 4.5,
+          reviews: [],
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      
+      localStorage.setItem('cookbook_recipes', JSON.stringify(sampleRecipes));
+      document.getElementById('seed-status').textContent = '✅ Данные загружены!';
+    }
+
+    function clearAll() {
+      if (confirm('Вы уверены? Все данные будут удалены!')) {
+        localStorage.clear();
+        document.getElementById('clear-status').textContent = '✅ LocalStorage очищен';
+      }
+    }
+
+    // Check on load
+    window.onload = checkStorage;
+  </script>
+</body>
+</html>
