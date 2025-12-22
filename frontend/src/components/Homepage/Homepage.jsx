@@ -43,7 +43,7 @@ function Homepage() {
   const getPlaceholderImage = (recipeId) => {
     // Use a consistent image based on recipe ID (not random)
     const imageId = recipeId % 10 + 1; // Cycle through 10 different images
-    return `https://picsum.photos/400/300?sig=${imageId}`;
+    return;
   };
 
   return (
@@ -73,9 +73,9 @@ function Homepage() {
                   <h3>{recipe.title}</h3>
                   <p className="pin-category">{recipe.category}</p>
                   <p className="pin-time">⏱️ {recipe.cook_time} мин</p>
-                  <div className="pin-rating">
+                  {/* <div className="pin-rating">
                     ⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))

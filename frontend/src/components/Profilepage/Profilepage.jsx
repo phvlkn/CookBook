@@ -108,14 +108,14 @@ function Profilepage() {
                       src={recipe.image || `/recipe-images/${recipe.title.toLowerCase().replace(/\s+/g, '-')}.jpg`}
                       alt={recipe.title}
                       onError={(e) => {
-                        e.target.src = `https://picsum.photos/300/400?random=${recipe.id}`;
+                        e.target.src = '';
                       }}
                     />
                   </a>
                   <div className="recipe-details">
                     <h4>{recipe.title}</h4>
                     <p>{recipe.category} • ⏱️ {recipe.cook_time} мин</p>
-                    <p className="recipe-rating">⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}</p>
+                    {/* <p className="recipe-rating">⭐ {recipe.rating_avg ? recipe.rating_avg.toFixed(1) : 'Нет оценок'}</p> */}
                     {isOwnProfile && (
                       <div className="recipe-actions">
                         <button

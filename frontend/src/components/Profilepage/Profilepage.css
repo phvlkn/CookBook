@@ -4,6 +4,7 @@
   padding: 100px 40px 40px; /* отступ сверху, чтобы не перекрывал Header */
   max-width: 1600px;
   margin: 0 auto;
+  color:#000;
 }
 
 /* Шапка профиля */

@@ -141,10 +141,10 @@ function Recipe() {
 
         <div className="recipe-header">
           <img
-            src={recipe.image || `https://picsum.photos/500/400?random=${recipe.id}`}
+            src={recipe.image}
             alt={recipe.title}
             onError={(e) => {
-              e.target.src = `https://picsum.photos/500/400?random=${recipe.id}`;
+              e.target.src = "";
             }}
             className="recipe-image"
           />
