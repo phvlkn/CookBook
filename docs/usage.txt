@@ -1,0 +1,160 @@
+CookBook API — Usage Guide
+
+Общие сведения
+- Swagger (OpenAPI UI): http://<API_HOST>:8000/docs
+- Все примеры используют базовый URL: http://localhost:8000 (замените на реальный хост/порт)
+
+Коротко о правах доступа
+- Публичные (не требуют токена):
+  - GET /api/recipes/all
+  - GET /api/recipes/{id}
+- Требуют авторизации (Bearer token):
+  - POST /api/auth/token (получение токена по email/password)
+  - POST /api/auth/register (регистрация)
+  - POST /api/recipes (создание JSON)
+  - POST /api/recipes/upload (multipart с фото)
+  - DELETE /api/recipes/{id} (только автор)
+  - POST /api/recipes/{id}/reviews (только авторизованные)
+  - POST /api/collections, POST /api/collections/{id}/recipes (только владелец коллекции)
+  - POST /api/shopping-lists (только авторизованные)
+
+Схема рецепта (вход — RecipeCreate)
+- title: string
+- description: string
+- cook_time: int (минуты)
+- category: string
+- diet: string | optional
+- cuisine: string | optional
+- steps: [{ order: int, text: string }, ...]
+- ingredients: [{ name: string, quantity: float, unit: string }, ...]
+- image: string | optional (в JSON можно указывать URL; при загрузке multipart-сервер сам назначит путь)
+
+Ответ (RecipeResponse) содержит вышеуказанные поля +: id, author_id, rating_avg, created_at
+
+----------------------------
+1) Получение списка рецептов (публичный)
+GET /api/recipes/all?skip=<int>&limit=<int>
+
+curl:
+curl -X GET "http://localhost:8000/api/recipes/all?skip=0&limit=20"
+
+Пример ответа: массив объектов RecipeResponse
+
+----------------------------
+2) Получение рецепта по id (публичный)
+GET /api/recipes/{recipe_id}
+
+curl:
+curl -X GET "http://localhost:8000/api/recipes/1"
+
+----------------------------
+3) Регистрация и получение токена
+A) Регистрация
+POST /api/auth/register
+Content-Type: application/json
+
+Тело (пример):
+{
+  "email": "alice@example.com",
+  "username": "alice",
+  "password": "alicepass"
+}
+
+B) Получение токена
+POST /api/auth/token
+Content-Type: application/json
+Тело:
+{ "email": "alice@example.com", "password": "alicepass" }
+
+Пример curl:
+curl -X POST http://localhost:8000/api/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice@example.com","password":"alicepass"}'
+
+Ответ:
+{ "access_token": "<JWT>", "token_type": "bearer" }
+
+Используйте заголовок Authorization: Bearer <JWT> для защищённых запросов.
+
+----------------------------
+4) Загрузка рецепта с фото (multipart/form-data)
+Endpoint: POST /api/recipes/upload
+Headers: Authorization: Bearer <JWT>
+Content-Type: multipart/form-data (формируется автоматически клиентом)
+
+Form fields (Postman form-data):
+- recipe_json (Text) — строка JSON соответствующая RecipeCreate. Пример значения (как текст):
+  {"title":"My Pancake","description":"Tasty","cook_time":20,"category":"Breakfast","steps":[{"order":1,"text":"Mix"}],"ingredients":[{"name":"Flour","quantity":200,"unit":"г"}]}
+- image (File) — (optional) файл изображения (png/jpg)
+
+curl пример:
+curl -X POST http://localhost:8000/api/recipes/upload \
+  -H "Authorization: Bearer <JWT>" \
+  -F 'recipe_json={"title":"My Pancake","description":"Tasty","cook_time":20,"category":"Breakfast","steps":[{"order":1,"text":"Mix"}],"ingredients":[{"name":"Flour","quantity":200,"unit":"г"}]}' \
+  -F "image=@/path/to/photo.jpg"
+
+Успех: возвращается объект RecipeResponse. Поле image будет строкой вида "/static/images/<uuid>.jpg".
+
+Примечание для фронтенда: если в ответе image — относительный путь "/static/..." — сформируйте полный URL: `${API_BASE}${recipe.image}`
+
+----------------------------
+5) Создание рецепта JSON (альтернатива, требует авторизации)
+POST /api/recipes
+Headers: Authorization: Bearer <JWT>
+Content-Type: application/json
+
+Тело: как RecipeCreate (string fields, arrays...).
+
+curl пример:
+curl -X POST http://localhost:8000/api/recipes \
+  -H "Authorization: Bearer <JWT>" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"X","description":"Y","cook_time":10,"category":"Snack","steps":[{"order":1,"text":"a"}],"ingredients":[{"name":"Salt","quantity":1,"unit":"г"}]}'
+
+----------------------------
+6) Удаление рецепта (только владелец)
+DELETE /api/recipes/{recipe_id}
+Headers: Authorization: Bearer <JWT>
+
+curl:
+curl -X DELETE http://localhost:8000/api/recipes/5 \
+  -H "Authorization: Bearer <JWT>"
+
+Коды ответов:
+- 200: успешно
+- 403: не владелец
+- 404: рецепт не найден
+
+----------------------------
+7) Коллекции
+A) Создать коллекцию
+POST /api/collections
+Headers: Authorization
+Body JSON: { "title": "Name", "description": "...", "is_public": true }
+
+B) Добавить рецепт в коллекцию (только владелец коллекции)
+POST /api/collections/{collection_id}/recipes
+Headers: Authorization
+Body JSON: { "recipe_id": <int> }
+
+curl пример добавления:
+curl -X POST http://localhost:8000/api/collections/1/recipes \
+  -H "Authorization: Bearer <JWT>" \
+  -H "Content-Type: application/json" \
+  -d '{"recipe_id":2}'
+
+Ошибки: 403 (не владелец), 404 (коллекция не найдена)
+
+----------------------------
+8) Отзывы
+POST /api/recipes/{recipe_id}/reviews
+Headers: Authorization
+Body JSON: { "rating": 5, "comment": "Nice" }
+
+GET /api/recipes/{recipe_id}/reviews — публично
+
+----------------------------
+9) Списки покупок
+POST /api/shopping-lists (auth) — body: ShoppingListCreate
+GET /api/users/{user_id}/shopping-lists — публично (текущее поведение)
+
