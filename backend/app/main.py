@@ -1,4 +1,7 @@
-from fastapi import FastAPI, HTTPException, status, Depends, Body, UploadFile, File, Form
+import logging
+from datetime import timedelta
+from fastapi import FastAPI, HTTPException, status, Depends, Body, UploadFile, File, Form, Request
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from sqlalchemy.orm import Session
 from database import init_db, get_db
@@ -36,15 +39,44 @@ from crud import (
     create_shopping_list,
     get_user_shopping_lists,
     get_user_by_id,
+    get_recipes_by_user,
 )
 from database import Collection
 
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(message)s")
 app = FastAPI(title="CookBook API")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logging.info(f"Received {request.method} {request.url}")
+    response = await call_next(request)
+    logging.info(f"Responded {response.status_code} to {request.method} {request.url}")
+    return response
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # mount static directory so images are served at /static/
 static_dir = os.path.join(os.path.dirname(__file__), '..', 'static')
 os.makedirs(os.path.join(static_dir, 'images'), exist_ok=True)
+os.makedirs(os.path.join(static_dir, 'avatars'), exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+def save_upload_file(upload: UploadFile, subfolder: str = "images") -> str:
+    ext = os.path.splitext(upload.filename)[1] or ".jpg"
+    filename = f"{uuid.uuid4().hex}{ext}"
+    folder = os.path.join(static_dir, subfolder)
+    os.makedirs(folder, exist_ok=True)
+    destination = os.path.join(folder, filename)
+    with open(destination, "wb") as f:
+        f.write(upload.file.read())
+    return f"/static/{subfolder}/{filename}"
 
 @app.get("/api/recipes")
 async def read_recipes():
@@ -87,15 +119,7 @@ def upload_recipe(
 
     # handle image if provided
     if image:
-        ext = os.path.splitext(image.filename)[1] or ".jpg"
-        filename = f"{uuid.uuid4().hex}{ext}"
-        images_dir = os.path.join(os.path.dirname(__file__), '..', 'static', 'images')
-        os.makedirs(images_dir, exist_ok=True)
-        dest_path = os.path.join(images_dir, filename)
-        with open(dest_path, "wb") as f:
-            f.write(image.file.read())
-        # store path accessible by client
-        recipe_obj.image = f"/static/images/{filename}"
+        recipe_obj.image = save_upload_file(image, subfolder="images")
 
     return create_recipe(db, recipe_obj, current_user.id)
 
@@ -154,6 +178,11 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
     return user
 
+
+@app.get("/api/users/{user_id}/recipes", response_model=List[RecipeResponse], tags=["Users"], summary="List recipes by user")
+def get_user_recipes(user_id: int, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    return get_recipes_by_user(db, user_id, skip=skip, limit=limit)
+
 @app.post("/api/auth/token", response_model=Token)
 async def login_for_access_token(user_data: UserLogin):
     user = authenticate_user(user_data.email, user_data.password)
@@ -172,6 +201,17 @@ async def login_for_access_token(user_data: UserLogin):
 @app.post("/api/auth/register", response_model=UserResponse)
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return create_user(db, user_data)
+
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def read_current_user(current_user=Depends(get_current_user)):
+    return current_user
+
+
+@app.post("/api/uploads/avatar")
+def upload_avatar(avatar: UploadFile = File(...)):
+    url = save_upload_file(avatar, subfolder="avatars")
+    return {"url": url}
 
 if __name__ == "__main__":
     import uvicorn
