@@ -1,5 +1,7 @@
-from backend.app.auth import hash_password
-from backend.app.database import SessionLocal, User
+from database import SessionLocal, User
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 def create_test_users():
     db = SessionLocal()
@@ -21,7 +23,7 @@ def create_test_users():
     for user_data in test_users:
         existing_user = db.query(User).filter(User.email == user_data["email"]).first()
         if not existing_user:
-            hashed_password = hash_password(user_data["password"])
+            hashed_password = pwd_context.hash(user_data["password"])
             user = User(
                 email=user_data["email"],
                 password_hash=hashed_password,

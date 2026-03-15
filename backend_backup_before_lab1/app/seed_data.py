@@ -1,16 +1,14 @@
-from sqlalchemy import text
-
-from backend.app.auth import hash_password
-from backend.app.database import (
-    Collection,
-    CollectionRecipes,
+from passlib.hash import pbkdf2_sha256
+from database import (
+    SessionLocal,
+    User,
     Ingredient,
     Recipe,
-    RecipeIngredients,
     Review,
-    SessionLocal,
+    Collection,
     ShoppingList,
-    User,
+    RecipeIngredients,
+    CollectionRecipes,
 )
 
 
@@ -26,7 +24,7 @@ def create_seed_data():
         for u in users:
             existing = db.query(User).filter(User.email == u["email"]).first()
             if not existing:
-                hashed = hash_password(u["password"])
+                hashed = pbkdf2_sha256.hash(u["password"])
                 user = User(email=u["email"], password_hash=hashed, username=u["username"], bio=u.get("bio"))
                 db.add(user)
         db.commit()
@@ -126,16 +124,10 @@ def create_seed_data():
             db.refresh(coll2)
 
         # collection recipes links
-        exists = db.execute(
-            text("SELECT 1 FROM collection_recipes WHERE collection_id = :c AND recipe_id = :r"),
-            {"c": coll1.id, "r": pancakes.id},
-        ).fetchone()
+        exists = db.execute("SELECT 1 FROM collection_recipes WHERE collection_id = :c AND recipe_id = :r", {"c": coll1.id, "r": pancakes.id}).fetchone()
         if not exists:
             db.execute(CollectionRecipes.insert().values(collection_id=coll1.id, recipe_id=pancakes.id))
-        exists = db.execute(
-            text("SELECT 1 FROM collection_recipes WHERE collection_id = :c AND recipe_id = :r"),
-            {"c": coll2.id, "r": omelette.id},
-        ).fetchone()
+        exists = db.execute("SELECT 1 FROM collection_recipes WHERE collection_id = :c AND recipe_id = :r", {"c": coll2.id, "r": omelette.id}).fetchone()
         if not exists:
             db.execute(CollectionRecipes.insert().values(collection_id=coll2.id, recipe_id=omelette.id))
         db.commit()

@@ -1,5 +1,4 @@
 # Backend Dockerfile for CookBook
-# Uses Python slim image, installs build deps for psycopg2, installs requirements and runs main.py
 
 FROM python:3.11-slim
 
@@ -16,7 +15,6 @@ WORKDIR /app
 COPY backend/app/requirements.txt ./backend/app/requirements.txt
 COPY requirements.txt ./requirements.txt
 
-# increase pip default timeout to reduce transient network failures during image build
 ENV PIP_DEFAULT_TIMEOUT=300
 
 RUN python -m pip install --upgrade pip && \
@@ -25,4 +23,4 @@ RUN python -m pip install --upgrade pip && \
 COPY . /app
 
 EXPOSE 8000
-CMD ["python", "backend/app/main.py"]
+CMD ["python", "-m", "backend.app.main"]

@@ -30,7 +30,7 @@ services:
       - ./:/app
     ports:
       - "8000:8000"
-    command: ["python", "backend/app/main.py"]
+    command: ["python", "-m", "backend.app.main"]
 
   frontend:
     build:

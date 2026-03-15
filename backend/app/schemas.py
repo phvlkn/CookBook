@@ -1,31 +1,27 @@
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import List, Optional
 
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-# ---------- USER ----------
 
 class UserBase(BaseModel):
     email: EmailStr
-    username: str
+    username: str = Field(min_length=2, max_length=100)
     bio: Optional[str] = None
     avatar: Optional[str] = None
 
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=6, max_length=128)
 
 
 class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     date_joined: datetime
     is_active: bool = True
 
-    class Config:
-        from_attributes = True
-
-
-# ---------- AUTH ----------
 
 class Token(BaseModel):
     access_token: str
@@ -36,10 +32,8 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-# ---------- INGREDIENT ----------
-
 class IngredientBase(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     default_unit: Optional[str] = "г"
 
 
@@ -48,35 +42,46 @@ class IngredientCreate(IngredientBase):
 
 
 class IngredientResponse(IngredientBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
 
-    class Config:
-        from_attributes = True
-
-
-# ---------- RECIPE ----------
 
 class RecipeStep(BaseModel):
-    order: int
-    text: str
+    order: int = Field(ge=1)
+    text: str = Field(min_length=3)
 
 
 class RecipeIngredientItem(BaseModel):
-    name: str
-    quantity: float
-    unit: str
+    name: str = Field(min_length=1, max_length=100)
+    quantity: float = Field(gt=0)
+    unit: str = Field(min_length=1, max_length=20)
 
 
 class RecipeBase(BaseModel):
-    title: str
-    description: str
-    cook_time: int
-    category: str
-    diet: Optional[str] = None
-    cuisine: Optional[str] = None
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=10)
+    cook_time: int = Field(gt=0, le=1440)
+    category: str = Field(min_length=2, max_length=50)
+    diet: Optional[str] = Field(default=None, max_length=50)
+    cuisine: Optional[str] = Field(default=None, max_length=50)
     steps: List[RecipeStep]
     ingredients: List[RecipeIngredientItem]
     image: Optional[str] = None
+
+    @field_validator("steps")
+    @classmethod
+    def validate_steps(cls, steps: List[RecipeStep]):
+        if not steps:
+            raise ValueError("Нужен хотя бы один шаг приготовления")
+        return steps
+
+    @field_validator("ingredients")
+    @classmethod
+    def validate_ingredients(cls, ingredients: List[RecipeIngredientItem]):
+        if not ingredients:
+            raise ValueError("Нужен хотя бы один ингредиент")
+        return ingredients
 
 
 class RecipeCreate(RecipeBase):
@@ -84,19 +89,16 @@ class RecipeCreate(RecipeBase):
 
 
 class RecipeResponse(RecipeBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     author_id: int
     rating_avg: float
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
-
-# ---------- REVIEW ----------
 
 class ReviewBase(BaseModel):
-    rating: int
+    rating: int = Field(ge=1, le=5)
     comment: Optional[str] = None
 
 
@@ -105,19 +107,16 @@ class ReviewCreate(ReviewBase):
 
 
 class ReviewResponse(ReviewBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     recipe_id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
-
-# ---------- COLLECTION ----------
 
 class CollectionBase(BaseModel):
-    title: str
+    title: str = Field(min_length=2, max_length=150)
     description: Optional[str] = None
     is_public: bool = True
 
@@ -127,25 +126,22 @@ class CollectionCreate(CollectionBase):
 
 
 class CollectionResponse(CollectionBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     created_at: datetime
     recipes: Optional[List[RecipeResponse]] = None
 
-    class Config:
-        from_attributes = True
-
-
-# ---------- SHOPPING LIST ----------
 
 class ShoppingListItem(BaseModel):
-    ingredient: str
-    quantity: float
-    unit: str
+    ingredient: str = Field(min_length=1, max_length=100)
+    quantity: float = Field(gt=0)
+    unit: str = Field(min_length=1, max_length=20)
 
 
 class ShoppingListBase(BaseModel):
-    title: str
+    title: str = Field(min_length=2, max_length=150)
     recipes: List[int]
     items: List[ShoppingListItem]
 
@@ -155,13 +151,13 @@ class ShoppingListCreate(ShoppingListBase):
 
 
 class ShoppingListResponse(ShoppingListBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str

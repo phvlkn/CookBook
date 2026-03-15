@@ -1,37 +1,33 @@
 import os
-
 from sqlalchemy import (
-    JSON,
-    Boolean,
     Column,
-    DateTime,
-    DECIMAL,
+    String,
+    Integer,
+    Boolean,
+    Text,
     Float,
     ForeignKey,
-    Integer,
-    String,
+    DateTime,
+    JSON,
     Table,
-    Text,
-    create_engine,
+    DECIMAL,
 )
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
-
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
+    # Default to localhost for local dev (Postgres.app or local container bound to 5432).
+    # When running inside docker-compose the env var should be set to use host `db`.
     "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/cookbook",
 )
 
 Base = declarative_base()
 
-
-def json_type():
-    if DATABASE_URL.startswith("postgresql"):
-        return JSONB
-    return JSON
-
+# ---------- ВСПОМОГАТЕЛЬНЫЕ ТАБЛИЦЫ (Many-to-Many) ----------
 
 RecipeIngredients = Table(
     "recipe_ingredients",
@@ -51,6 +47,7 @@ CollectionRecipes = Table(
     Column("recipe_id", Integer, ForeignKey("recipes.id", ondelete="CASCADE")),
 )
 
+# ---------- ОСНОВНЫЕ ТАБЛИЦЫ ----------
 
 class User(Base):
     __tablename__ = "users"
@@ -82,7 +79,7 @@ class Recipe(Base):
     category = Column(String(50), nullable=False)
     diet = Column(String(50), nullable=True)
     cuisine = Column(String(50), nullable=True)
-    steps = Column(json_type(), nullable=False)
+    steps = Column(JSONB, nullable=False)
     image = Column(String(255), nullable=True)
     rating_avg = Column(Float, default=0.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -138,21 +135,24 @@ class ShoppingList(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     title = Column(String(150), nullable=False)
-    recipes = Column(json_type(), nullable=False)
-    items = Column(json_type(), nullable=False)
+    recipes = Column(JSONB, nullable=False)
+    items = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     user = relationship("User", back_populates="shopping_lists")
 
+# ---------- НАСТРОЙКА СЕССИИ ----------
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
+    """Создание всех таблиц в БД"""
     Base.metadata.create_all(bind=engine)
 
+# ---------- ФУНКЦИЯ ДЛЯ ЗАВИСИМОСТЕЙ FASTAPI ----------
 
 def get_db():
     db = SessionLocal()

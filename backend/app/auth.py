@@ -1,44 +1,51 @@
-from datetime import datetime, timedelta
+import os
+from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from database import SessionLocal, User
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
 
-# OAuth2 scheme for reading token from Authorization header
+from backend.app.database import SessionLocal, User
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-# Настройки из .env
-SECRET_KEY = "supersecretkey123"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = os.getenv("SECRET_KEY", "cookbook-dev-secret")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
-def verify_password(plain_password, hashed_password):
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
 
 def get_user_by_email(email: str):
     db = SessionLocal()
-    user = db.query(User).filter(User.email == email).first()
-    db.close()
-    return user
+    try:
+        return db.query(User).filter(User.email == email).first()
+    finally:
+        db.close()
+
 
 def authenticate_user(email: str, password: str):
     user = get_user_by_email(email)
     if not user or not verify_password(password, user.password_hash):
-        return False
+        return None
     return user
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    expire_delta = expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = data.copy()
+    payload["exp"] = datetime.now(timezone.utc) + expire_delta
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -49,16 +56,18 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        email = payload.get("sub")
+        if not email:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+    except JWTError as error:
+        raise credentials_exception from error
+
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.email == email).first()
     finally:
         db.close()
+
     if user is None:
         raise credentials_exception
     return user
